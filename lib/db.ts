@@ -33,3 +33,56 @@ export async function getDashboardStats() {
     avgProbability: 75
   };
 }
+
+export async function getMyOrders() {
+  const result = await pool.query(`
+    SELECT * FROM my_orders
+    ORDER BY created_time DESC
+    LIMIT 50
+  `);
+  return result.rows;
+}
+
+export async function getMyListings() {
+  const result = await pool.query(`
+    SELECT * FROM my_listings
+    WHERE listing_status = 'Active'
+    ORDER BY current_price DESC
+    LIMIT 100
+  `);
+  return result.rows;
+}
+
+export async function getBusinessStats() {
+  const ordersResult = await pool.query(`
+    SELECT
+      COUNT(*) as total_orders,
+      COALESCE(SUM(total_amount), 0) as total_revenue,
+      COUNT(CASE WHEN created_time >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as orders_last_30_days,
+      COALESCE(SUM(CASE WHEN created_time >= CURRENT_DATE - INTERVAL '30 days' THEN total_amount ELSE 0 END), 0) as revenue_last_30_days
+    FROM my_orders
+  `);
+
+  const listingsResult = await pool.query(`
+    SELECT
+      COUNT(*) as active_listings,
+      COALESCE(SUM(views), 0) as total_views,
+      COALESCE(AVG(current_price), 0) as avg_price
+    FROM my_listings
+    WHERE listing_status = 'Active'
+  `);
+
+  return {
+    orders: {
+      total_orders: parseInt(ordersResult.rows[0].total_orders),
+      total_revenue: parseFloat(ordersResult.rows[0].total_revenue),
+      orders_last_30_days: parseInt(ordersResult.rows[0].orders_last_30_days),
+      revenue_last_30_days: parseFloat(ordersResult.rows[0].revenue_last_30_days)
+    },
+    listings: {
+      active_listings: parseInt(listingsResult.rows[0].active_listings),
+      total_views: parseInt(listingsResult.rows[0].total_views),
+      avg_price: parseFloat(listingsResult.rows[0].avg_price)
+    }
+  };
+}
