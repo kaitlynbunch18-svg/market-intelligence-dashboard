@@ -1,1 +1,1 @@
-module.exports = { reactStrictMode: true } 
+module.exports = { reactStrictMode: true, output: 'standalone', experimental: { serverActions: { bodySizeLimit: '2mb' } } } 
