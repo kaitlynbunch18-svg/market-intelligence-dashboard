@@ -20,7 +20,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({ search: '', stage: '', source: '', sortBy: 'value' });
 
-  useEffect(()  => {
+  useEffect(() => {
     Promise.all([
       fetch('/api/opportunities').then(res => res.json()),
       fetch('/api/business-stats').then(res => res.json()),
