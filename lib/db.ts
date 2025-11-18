@@ -48,7 +48,14 @@ export async function getMyListings() {
     SELECT * FROM my_listings
     WHERE listing_status = 'Active'
     ORDER BY current_price DESC
-    LIMIT 100
+  `);
+  return result.rows;
+}
+
+export async function getAllProducts() {
+  const result = await pool.query(`
+    SELECT * FROM my_listings
+    ORDER BY created_time DESC
   `);
   return result.rows;
 }
