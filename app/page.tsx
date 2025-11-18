@@ -329,3 +329,62 @@ export default function Home() {
     </div>
   );
 } 
+
+'use client';
+
+import { useState, useMemo, useEffect } from 'react';
+import Header from './components/Header';
+import StatsCards from './components/StatsCards';
+import FilterPanel from './components/FilterPanel';
+import OpportunityCard from './components/OpportunityCard';
+import { FilterState, Stats } from '@/lib/types';
+
+export const dynamic = 'force-dynamic';
+
+export default function Home() {
+  const [activeTab, setActiveTab] = useState('opportunities');
+  const [opportunities, setOpportunities] = useState([]);
+  const [stats, setStats] = useState<Stats>({ totalOpportunities: 0, totalValue: 0, expectedRevenue: 0, avgProbability: 0 });
+  const [businessStats, setBusinessStats] = useState<any>(null);
+  const [myOrders, setMyOrders] = useState([]);
+  const [myListings, setMyListings] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [productsPage, setProductsPage] = useState(1);
+  const [productsPerPage] = useState(50);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<FilterState>({ search: '', stage: '', source: '', sortBy: 'value' });
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/opportunities').then(res => res.json()),
+      fetch('/api/business-stats').then(res => res.json()),
+      fetch('/api/my-orders').then(res => res.json()),
+      fetch('/api/my-listings').then(res => res.json()),
+      fetch('/api/products').then(res => res.json())
+    ])
+      .then(([oppData, statsData, ordersData, listingsData, productsData]) => {
+        setOpportunities(oppData.opportunities || []);
+        setStats(oppData.stats || { totalOpportunities: 0, totalValue: 0, expectedRevenue: 0, avgProbability: 0 });
+        setBusinessStats(statsData);
+        setMyOrders(ordersData || []);
+        setMyListings(listingsData || []);
+        setAllProducts(productsData || []);
+        setIsLoading(false);
+      })
+      .catch(err => { 
+        console.error('Error loading data:', err); 
+        setError(err.message);
+        setIsLoading(false); 
+      });
+  }, []);
+// ... existing code ...
+
+  const totalProductPages = Math.ceil(allProducts.length / productsPerPage);
+
+  if (isLoading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><p>Loading...</p></div>;
+  
+  if (error) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><p className="text-red-600">Error: {error}</p></div>;
+
+  return (
+// ... existing code ...
